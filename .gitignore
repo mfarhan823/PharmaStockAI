@@ -38,8 +38,8 @@ build/
 ### Mac OS ###
 .DS_Store
 
-# API Keys & Config (hide sensitive data)    ← YEH NAYA
-src/main/resources/config.properties          ← YEH NAYA
-*.properties                                   ← YEH NAYA
+
+src/main/resources/config.properties
+*.properties
 
 pharmacy_db.txt
