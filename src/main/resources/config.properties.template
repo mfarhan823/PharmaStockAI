@@ -1,0 +1,11 @@
+# PharmaStock Configuration
+# Copy this file to config.properties and fill in your values
+
+# Groq API Key — get yours at https://console.groq.com
+api.key=YOUR_GROQ_API_KEY_HERE
+
+# Groq API endpoint (do not change)
+api.url=https://api.groq.com/openai/v1/chat/completions
+
+# Model to use
+model.name=llama-3.1-8b-instant

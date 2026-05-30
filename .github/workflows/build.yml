@@ -1,0 +1,69 @@
+name: Build & Release PharmaStock
+
+on:
+  push:
+    tags:
+      - "v*.*.*"   # triggers on tags like v1.0.0
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── Java 21 + JavaFX support ──────────────────────────────────────
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      # ── Inject API key from GitHub Secret into config.properties ──────
+      - name: Create config.properties
+        shell: bash
+        run: |
+          cat > src/main/resources/config.properties <<EOF
+          api.key=${{ secrets.GROQ_API_KEY }}
+          api.url=https://api.groq.com/openai/v1/chat/completions
+          model.name=llama-3.1-8b-instant
+          EOF
+
+      # ── Build fat JAR ─────────────────────────────────────────────────
+      - name: Build fat JAR with Maven
+        run: mvnw.cmd package -q
+
+      # ── Package into Windows .exe installer using jpackage ────────────
+      - name: Create Windows installer with jpackage
+        shell: cmd
+        run: |
+          jpackage ^
+            --input target ^
+            --main-jar PharmaStock-fat.jar ^
+            --main-class pharmastock.ui.MainApp ^
+            --name PharmaStock ^
+            --app-version ${{ github.ref_name }} ^
+            --type exe ^
+            --win-shortcut ^
+            --win-menu ^
+            --dest installer ^
+            --java-options "--add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED"
+
+      # ── Upload .exe to GitHub Releases ────────────────────────────────
+      - name: Upload installer to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/*.exe
+          name: PharmaStock ${{ github.ref_name }}
+          body: |
+            ## PharmaStock ${{ github.ref_name }}
+
+            ### Installation
+            1. Download `PharmaStock-*.exe` below
+            2. Run the installer — no Java required
+            3. Launch PharmaStock from Start Menu or Desktop shortcut
+
+            ### Login
+            - Admin: `admin` / `admin123`
+            - User: `user` / `user123`

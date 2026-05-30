@@ -38,7 +38,9 @@ build/
 ### Mac OS ###
 .DS_Store
 
-# API Keys & Config
+# API Keys & Config — never commit the real config
 src/main/resources/config.properties
-*.properties
 pharmacy_db.txt
+
+out/
+
