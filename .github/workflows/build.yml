@@ -26,15 +26,26 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      # ── Inject API key ────────────────────────────────────────────────
+      # ── WiX 3.x — jpackage requires WiX 3, NOT WiX 4 ─────────────────
+      - name: Install WiX 3
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip" -OutFile "wix3.zip"
+          Expand-Archive -Path "wix3.zip" -DestinationPath "wix3"
+          Add-Content -Path $env:GITHUB_PATH -Value "${{ github.workspace }}\wix3"
+
+      # ── Inject API key (utf8NoBOM — Java Properties.load fails on BOM) ─
       - name: Create config.properties
         shell: pwsh
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
-          "api.key=$env:GROQ_API_KEY"                              | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8
-          "api.url=https://api.groq.com/openai/v1/chat/completions" | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8 -Append
-          "model.name=llama-3.1-8b-instant"                        | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8 -Append
+          $lines = @(
+            "api.key=$env:GROQ_API_KEY",
+            "api.url=https://api.groq.com/openai/v1/chat/completions",
+            "model.name=llama-3.1-8b-instant"
+          )
+          [System.IO.File]::WriteAllLines("src/main/resources/config.properties", $lines)
 
       # ── Build fat JAR ─────────────────────────────────────────────────
       - name: Build fat JAR
@@ -50,22 +61,22 @@ jobs:
             -OutFile "javafx-jmods.zip"
           Expand-Archive -Path "javafx-jmods.zip" -DestinationPath "javafx-jmods"
 
-      # ── jlink: custom JRE with JavaFX baked in ────────────────────────
+      # ── jlink: custom JRE with JavaFX + all SSL/TLS modules ───────────
       - name: Build custom JRE with jlink
         shell: pwsh
         run: |
           $jmodsPath = "javafx-jmods\javafx-jmods-${{ env.JAVAFX_VERSION }}"
           jlink `
             --module-path "$env:JAVA_HOME\jmods;$jmodsPath" `
-            --add-modules java.base,java.desktop,java.logging,java.net.http,java.prefs,java.xml,javafx.controls,javafx.fxml,javafx.graphics,javafx.base `
+            --add-modules java.base,java.desktop,java.logging,java.management,java.naming,java.net.http,java.prefs,java.security.jgss,java.security.sasl,java.xml,javafx.controls,javafx.fxml,javafx.graphics,javafx.base,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.localedata,jdk.zipfs `
             --output custom-jre `
             --strip-debug `
             --no-header-files `
             --no-man-pages `
-            --compress=2
+            --compress zip-6
 
-      # ── jpackage: portable app-image (no WiX needed) ─────────────────
-      - name: Create portable app with jpackage
+      # ── jpackage: .exe installer with desktop + start menu shortcut ───
+      - name: Create Windows installer
         shell: pwsh
         run: |
           $version = "${{ github.ref_name }}".TrimStart('v')
@@ -76,32 +87,28 @@ jobs:
             --runtime-image custom-jre `
             --name PharmaStock `
             --app-version $version `
-            --type app-image `
-            --dest app-output
+            --type exe `
+            --win-shortcut `
+            --win-menu `
+            --win-dir-chooser `
+            --dest installer `
+            --vendor "PharmaStock" `
+            --description "Pharmacy Inventory Management System"
 
-      # ── Zip the app-image folder for download ─────────────────────────
-      - name: Zip app-image
-        shell: pwsh
-        run: |
-          $version = "${{ github.ref_name }}".TrimStart('v')
-          Compress-Archive `
-            -Path "app-output\PharmaStock" `
-            -DestinationPath "PharmaStock-$version-windows.zip"
-
-      # ── Upload zip to GitHub Releases ─────────────────────────────────
+      # ── Upload .exe to GitHub Releases ────────────────────────────────
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: PharmaStock-*.zip
+          files: installer/*.exe
           name: PharmaStock ${{ github.ref_name }}
           body: |
             ## PharmaStock ${{ github.ref_name }}
 
-            ### How to run
-            1. Download `PharmaStock-*-windows.zip` below
-            2. Extract the zip anywhere (e.g. Desktop)
-            3. Open the extracted folder → double-click `PharmaStock.exe`
-            4. No Java installation required
+            ### Installation
+            1. Download `PharmaStock-*.exe` below
+            2. Double-click to install
+            3. Desktop shortcut will be created automatically
+            4. Launch PharmaStock from the shortcut — no Java required
 
             ### Login
             - Admin: `admin` / `admin123`
