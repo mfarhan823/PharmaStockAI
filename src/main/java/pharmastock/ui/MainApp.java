@@ -1,4 +1,4 @@
-﻿package pharmastock.ui;
+package pharmastock.ui;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
