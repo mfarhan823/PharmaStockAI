@@ -32,16 +32,16 @@ jobs:
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
-          "api.key=$env:GROQ_API_KEY" | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8
+          "api.key=$env:GROQ_API_KEY"                              | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8
           "api.url=https://api.groq.com/openai/v1/chat/completions" | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8 -Append
-          "model.name=llama-3.1-8b-instant" | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8 -Append
+          "model.name=llama-3.1-8b-instant"                        | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8 -Append
 
       # ── Build fat JAR ─────────────────────────────────────────────────
       - name: Build fat JAR
         shell: pwsh
         run: ./mvnw.cmd package -q
 
-      # ── Download JavaFX SDK (has jmods needed for jlink) ──────────────
+      # ── Download JavaFX jmods ─────────────────────────────────────────
       - name: Download JavaFX jmods
         shell: pwsh
         run: |
@@ -50,14 +50,13 @@ jobs:
             -OutFile "javafx-jmods.zip"
           Expand-Archive -Path "javafx-jmods.zip" -DestinationPath "javafx-jmods"
 
-      # ── jlink: build a minimal JRE with JavaFX modules baked in ───────
+      # ── jlink: custom JRE with JavaFX baked in ────────────────────────
       - name: Build custom JRE with jlink
         shell: pwsh
         run: |
-          $javaHome = $env:JAVA_HOME
           $jmodsPath = "javafx-jmods\javafx-jmods-${{ env.JAVAFX_VERSION }}"
           jlink `
-            --module-path "$javaHome\jmods;$jmodsPath" `
+            --module-path "$env:JAVA_HOME\jmods;$jmodsPath" `
             --add-modules java.base,java.desktop,java.logging,java.net.http,java.prefs,java.xml,javafx.controls,javafx.fxml,javafx.graphics,javafx.base `
             --output custom-jre `
             --strip-debug `
@@ -65,8 +64,8 @@ jobs:
             --no-man-pages `
             --compress=2
 
-      # ── jpackage: wrap fat JAR + custom JRE into .exe installer ───────
-      - name: Create Windows installer with jpackage
+      # ── jpackage: portable app-image (no WiX needed) ─────────────────
+      - name: Create portable app with jpackage
         shell: pwsh
         run: |
           $version = "${{ github.ref_name }}".TrimStart('v')
@@ -77,24 +76,32 @@ jobs:
             --runtime-image custom-jre `
             --name PharmaStock `
             --app-version $version `
-            --type exe `
-            --win-shortcut `
-            --win-menu `
-            --dest installer
+            --type app-image `
+            --dest app-output
 
-      # ── Upload .exe to GitHub Releases ────────────────────────────────
+      # ── Zip the app-image folder for download ─────────────────────────
+      - name: Zip app-image
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          Compress-Archive `
+            -Path "app-output\PharmaStock" `
+            -DestinationPath "PharmaStock-$version-windows.zip"
+
+      # ── Upload zip to GitHub Releases ─────────────────────────────────
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: installer/*.exe
+          files: PharmaStock-*.zip
           name: PharmaStock ${{ github.ref_name }}
           body: |
             ## PharmaStock ${{ github.ref_name }}
 
-            ### Installation
-            1. Download `PharmaStock-*.exe` below
-            2. Run the installer — no Java required
-            3. Launch from Start Menu or Desktop shortcut
+            ### How to run
+            1. Download `PharmaStock-*-windows.zip` below
+            2. Extract the zip anywhere (e.g. Desktop)
+            3. Open the extracted folder → double-click `PharmaStock.exe`
+            4. No Java installation required
 
             ### Login
             - Admin: `admin` / `admin123`
