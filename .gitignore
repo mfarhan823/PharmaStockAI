@@ -38,8 +38,7 @@ build/
 ### Mac OS ###
 .DS_Store
 
-
+# API Keys & Config
 src/main/resources/config.properties
 *.properties
-
 pharmacy_db.txt
