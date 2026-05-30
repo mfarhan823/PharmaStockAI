@@ -7,6 +7,7 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  JAVAFX_VERSION: "21.0.6"
 
 permissions:
   contents: write
@@ -25,26 +26,48 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      # ── Inject API key — use PowerShell to avoid heredoc indentation issues
+      # ── Inject API key ────────────────────────────────────────────────
       - name: Create config.properties
         shell: pwsh
         run: |
           $content = @"
-          api.key=${{ secrets.GROQ_API_KEY }}
-          api.url=https://api.groq.com/openai/v1/chat/completions
-          model.name=llama-3.1-8b-instant
-          "@
-          # Remove leading spaces from each line
-          $content = ($content -split "`n" | ForEach-Object { $_.TrimStart() }) -join "`n"
+api.key=${{ secrets.GROQ_API_KEY }}
+api.url=https://api.groq.com/openai/v1/chat/completions
+model.name=llama-3.1-8b-instant
+"@
           Set-Content -Path "src/main/resources/config.properties" -Value $content
 
-      # ── Make mvnw executable and build fat JAR ────────────────────────
+      # ── Build fat JAR ─────────────────────────────────────────────────
       - name: Build fat JAR
         shell: pwsh
         run: ./mvnw.cmd package -q
 
-      # ── jpackage: strip the leading 'v' from tag for app-version ─────
-      - name: Create Windows installer
+      # ── Download JavaFX SDK (has jmods needed for jlink) ──────────────
+      - name: Download JavaFX jmods
+        shell: pwsh
+        run: |
+          Invoke-WebRequest `
+            -Uri "https://download2.gluonhq.com/openjfx/${{ env.JAVAFX_VERSION }}/openjfx-${{ env.JAVAFX_VERSION }}_windows-x64_bin-jmods.zip" `
+            -OutFile "javafx-jmods.zip"
+          Expand-Archive -Path "javafx-jmods.zip" -DestinationPath "javafx-jmods"
+
+      # ── jlink: build a minimal JRE with JavaFX modules baked in ───────
+      - name: Build custom JRE with jlink
+        shell: pwsh
+        run: |
+          $javaHome = $env:JAVA_HOME
+          $jmodsPath = "javafx-jmods\javafx-jmods-${{ env.JAVAFX_VERSION }}"
+          jlink `
+            --module-path "$javaHome\jmods;$jmodsPath" `
+            --add-modules java.base,java.desktop,java.logging,java.net.http,java.prefs,java.xml,javafx.controls,javafx.fxml,javafx.graphics,javafx.base `
+            --output custom-jre `
+            --strip-debug `
+            --no-header-files `
+            --no-man-pages `
+            --compress=2
+
+      # ── jpackage: wrap fat JAR + custom JRE into .exe installer ───────
+      - name: Create Windows installer with jpackage
         shell: pwsh
         run: |
           $version = "${{ github.ref_name }}".TrimStart('v')
@@ -52,6 +75,7 @@ jobs:
             --input target `
             --main-jar PharmaStock-fat.jar `
             --main-class pharmastock.ui.MainApp `
+            --runtime-image custom-jre `
             --name PharmaStock `
             --app-version $version `
             --type exe `
@@ -59,6 +83,7 @@ jobs:
             --win-menu `
             --dest installer
 
+      # ── Upload .exe to GitHub Releases ────────────────────────────────
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
