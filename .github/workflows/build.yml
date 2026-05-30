@@ -29,13 +29,12 @@ jobs:
       # ── Inject API key ────────────────────────────────────────────────
       - name: Create config.properties
         shell: pwsh
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
-          $content = @"
-api.key=${{ secrets.GROQ_API_KEY }}
-api.url=https://api.groq.com/openai/v1/chat/completions
-model.name=llama-3.1-8b-instant
-"@
-          Set-Content -Path "src/main/resources/config.properties" -Value $content
+          "api.key=$env:GROQ_API_KEY" | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8
+          "api.url=https://api.groq.com/openai/v1/chat/completions" | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8 -Append
+          "model.name=llama-3.1-8b-instant" | Out-File -FilePath "src/main/resources/config.properties" -Encoding utf8 -Append
 
       # ── Build fat JAR ─────────────────────────────────────────────────
       - name: Build fat JAR
