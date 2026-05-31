@@ -9,13 +9,15 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import pharmastock.service.ConfigLoader;
 
 public class LoginWindow {
 
-    private static final String ADMIN_USER = "admin";
-    private static final String ADMIN_PASS = "admin123";
-    private static final String USER_USER  = "user";
-    private static final String USER_PASS  = "user123";
+    // Credentials loaded from config.properties — not hardcoded in source code
+    private static final String ADMIN_USER = ConfigLoader.getAdminUsername();
+    private static final String ADMIN_PASS = ConfigLoader.getAdminPassword();
+    private static final String USER_USER  = ConfigLoader.getUserUsername();
+    private static final String USER_PASS  = ConfigLoader.getUserPassword();
 
     public void show(Stage loginStage) {
 
@@ -64,18 +66,13 @@ public class LoginWindow {
         btnLogin.setOnMouseEntered(e -> btnLogin.setStyle(hover));
         btnLogin.setOnMouseExited(e  -> btnLogin.setStyle(base));
 
-        Label hint = new Label("Admin: admin / admin123     User: user / user123");
-        hint.setFont(Font.font("Arial", 11));
-        hint.setTextFill(Color.web("#9CA3AF"));
-
         VBox formBox = new VBox(14,
                 new Label("Username:"),
                 txtUsername,
                 new Label("Password:"),
                 txtPassword,
                 lblError,
-                btnLogin,
-                hint
+                btnLogin
         );
         formBox.setPadding(new Insets(24, 30, 24, 30));
         formBox.setAlignment(Pos.CENTER_LEFT);
@@ -92,7 +89,6 @@ public class LoginWindow {
 
             if (username.equals(ADMIN_USER) && password.equals(ADMIN_PASS)) {
                 loginStage.close();
-                // MainWindow directly banao — koi MainApp nahi
                 new MainWindow("admin");
 
             } else if (username.equals(USER_USER) && password.equals(USER_PASS)) {
@@ -105,7 +101,7 @@ public class LoginWindow {
         });
 
         VBox root = new VBox(0, headerBox, formBox);
-        Scene scene = new Scene(root, 360, 420);
+        Scene scene = new Scene(root, 360, 400);
         loginStage.setTitle("PharmaStock - Login");
         loginStage.setScene(scene);
         loginStage.setResizable(false);

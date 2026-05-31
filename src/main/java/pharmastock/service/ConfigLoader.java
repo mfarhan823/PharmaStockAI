@@ -22,6 +22,7 @@ public class ConfigLoader {
         }
     }
 
+    // API config
     public static String getApiKey() {
         return properties.getProperty("api.key");
     }
@@ -32,5 +33,22 @@ public class ConfigLoader {
 
     public static String getModelName() {
         return properties.getProperty("model.name");
+    }
+
+    // Login credentials — read from config, not hardcoded in source
+    public static String getAdminUsername() {
+        return properties.getProperty("admin.username");
+    }
+
+    public static String getAdminPassword() {
+        return properties.getProperty("admin.password");
+    }
+
+    public static String getUserUsername() {
+        return properties.getProperty("user.username");
+    }
+
+    public static String getUserPassword() {
+        return properties.getProperty("user.password");
     }
 }

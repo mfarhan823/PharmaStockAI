@@ -1,5 +1,9 @@
 package pharmastock.model;
 
+/**
+ * Subclass of Medication representing over-the-counter medicines.
+ * Inherits from Medication, overrides displayInfo() and toFileString().
+ */
 public class OverTheCounter extends Medication {
 
     private String symptom;
@@ -18,6 +22,7 @@ public class OverTheCounter extends Medication {
     public double getDiscountRate() { return discountRate; }
     public void setDiscountRate(double discountRate) { this.discountRate = discountRate; }
 
+    // Polymorphism: overrides Displayable.displayInfo() via Medication
     @Override
     public String displayInfo() {
         return "[OTC] " +
@@ -27,5 +32,17 @@ public class OverTheCounter extends Medication {
                 "Stock: " + getStockCount() + " | " +
                 "Symptom: " + symptom + " | " +
                 "Discount: " + discountRate + "%";
+    }
+
+    // Polymorphism: each subclass serializes itself — no instanceof needed
+    @Override
+    public String toFileString() {
+        return "OTC," +
+                getId() + "," +
+                getName() + "," +
+                getPrice() + "," +
+                getStockCount() + "," +
+                getSymptom() + "," +
+                getDiscountRate();
     }
 }

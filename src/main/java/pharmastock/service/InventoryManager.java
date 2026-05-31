@@ -59,7 +59,7 @@ public class InventoryManager {
         }
     }
 
-    // Polymorphism: displayInfo() calls correct child version
+    // Polymorphism: displayInfo() calls the correct subclass version at runtime
     public String getAllMedicinesAsText() {
         if (medicineList.isEmpty()) {
             return "No medicines in inventory.";
@@ -89,22 +89,10 @@ public class InventoryManager {
             File file = new File(FILE_PATH);
             writer = new PrintWriter(file);
 
+            // Polymorphism: each subclass handles its own serialization via toFileString()
+            // No instanceof needed — clean OOP design
             for (Medication med : medicineList) {
-                if (med instanceof PrescriptionDrug) {
-                    PrescriptionDrug pd = (PrescriptionDrug) med;
-                    writer.println("PRESCRIPTION," +
-                            pd.getId() + "," + pd.getName() + "," +
-                            pd.getPrice() + "," + pd.getStockCount() + "," +
-                            pd.isDoctorLicenseRequired() + "," + pd.getScheduleLevel()
-                    );
-                } else if (med instanceof OverTheCounter) {
-                    OverTheCounter otc = (OverTheCounter) med;
-                    writer.println("OTC," +
-                            otc.getId() + "," + otc.getName() + "," +
-                            otc.getPrice() + "," + otc.getStockCount() + "," +
-                            otc.getSymptom() + "," + otc.getDiscountRate()
-                    );
-                }
+                writer.println(med.toFileString());
             }
 
             System.out.println("File saved at: " + FILE_PATH);
@@ -135,7 +123,8 @@ public class InventoryManager {
                 String line = scanner.nextLine().trim();
                 if (line.isEmpty()) continue;
 
-                String[] parts = line.split(",");
+                // Limit split to 7 parts — protects against commas inside medicine names
+                String[] parts = line.split(",", 7);
 
                 if (parts[0].equals("PRESCRIPTION") && parts.length == 7) {
                     addMedicine(parts[1], parts[2],

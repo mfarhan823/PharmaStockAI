@@ -1,5 +1,9 @@
 package pharmastock.model;
 
+/**
+ * Subclass of Medication representing prescription-only drugs.
+ * Inherits from Medication, overrides displayInfo() and toFileString().
+ */
 public class PrescriptionDrug extends Medication {
 
     private boolean doctorLicenseRequired;
@@ -18,6 +22,7 @@ public class PrescriptionDrug extends Medication {
     public int getScheduleLevel() { return scheduleLevel; }
     public void setScheduleLevel(int scheduleLevel) { this.scheduleLevel = scheduleLevel; }
 
+    // Polymorphism: overrides Displayable.displayInfo() via Medication
     @Override
     public String displayInfo() {
         return "[PRESCRIPTION] " +
@@ -27,5 +32,17 @@ public class PrescriptionDrug extends Medication {
                 "Stock: " + getStockCount() + " | " +
                 "License Required: " + (doctorLicenseRequired ? "Yes" : "No") + " | " +
                 "Schedule Level: " + scheduleLevel;
+    }
+
+    // Polymorphism: each subclass serializes itself — no instanceof needed
+    @Override
+    public String toFileString() {
+        return "PRESCRIPTION," +
+                getId() + "," +
+                getName() + "," +
+                getPrice() + "," +
+                getStockCount() + "," +
+                isDoctorLicenseRequired() + "," +
+                getScheduleLevel();
     }
 }
