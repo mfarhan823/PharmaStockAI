@@ -43,7 +43,11 @@ jobs:
           $lines = @(
             "api.key=$env:GROQ_API_KEY",
             "api.url=https://api.groq.com/openai/v1/chat/completions",
-            "model.name=llama-3.1-8b-instant"
+            "model.name=llama-3.1-8b-instant",
+            "admin.username=admin",
+            "admin.password=admin123",
+            "user.username=user",
+            "user.password=user123"
           )
           [System.IO.File]::WriteAllLines("src/main/resources/config.properties", $lines)
 
@@ -89,8 +93,10 @@ jobs:
             --app-version $version `
             --type exe `
             --win-shortcut `
+            --win-shortcut-prompt `
             --win-menu `
             --win-dir-chooser `
+            --win-per-user-install `
             --dest installer `
             --vendor "PharmaStock" `
             --description "Pharmacy Inventory Management System"
