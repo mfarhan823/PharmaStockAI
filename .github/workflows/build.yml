@@ -96,6 +96,7 @@ jobs:
             --win-shortcut-prompt `
             --win-menu `
             --win-dir-chooser `
+            --win-per-user-install `
             --dest installer `
             --vendor "PharmaStock" `
             --description "Pharmacy Inventory Management System"
