@@ -16,10 +16,12 @@ public class InventoryManager {
 
     private ArrayList<Medication> medicineList;
 
-    private static final String FILE_PATH = "pharmacy_db.txt";
+    private static final String FILE_PATH =
+            System.getProperty("user.home") + File.separator + "Documents" + File.separator + "PharmaStock" + File.separator + "pharmacy_db.txt";
 
     public InventoryManager() {
         this.medicineList = new ArrayList<>();
+        new File(FILE_PATH).getParentFile().mkdirs();
     }
 
     // Method Overloading - Version 1: Prescription
@@ -79,7 +81,8 @@ public class InventoryManager {
         return sb.toString();
     }
 
-    private static final String BILLS_FILE_PATH = "pharmacy_bills.txt";
+    private static final String BILLS_FILE_PATH =
+            System.getProperty("user.home") + File.separator + "Documents" + File.separator + "PharmaStock" + File.separator + "pharmacy_bills.txt";
 
     public void saveBill(String billText) {
         PrintWriter writer = null;
