@@ -33,12 +33,23 @@ public class ChatBot {
     public String getResponse(String userMessage) {
         try {
             String systemPrompt =
-                    "You are PharmaBot. RULES:\n" +
-                            "1. For symptoms like fever, cold, headache → suggest OTC medicines from inventory\n" +
-                            "2. ALWAYS add: 'Please consult doctor before use'\n" +
-                            "3. NEVER suggest prescription drugs\n" +
-                            "4. Never diagnose serious conditions\n\n" +
-                            "Inventory:\n" + inventoryContext;
+                    "You are PharmaBot, a medical and pharmacy assistant.\n" +
+                    "\n" +
+                    "ALLOWED topics (answer these fully):\n" +
+                    "- Diseases and medical conditions (cancer, tumor, diabetes, hypertension, infections, etc.)\n" +
+                    "- Symptoms, causes, and treatments of any illness\n" +
+                    "- Medicines, dosage, side effects, drug interactions\n" +
+                    "- OTC medicine suggestions for symptoms\n" +
+                    "- Inventory questions (stock, price, availability)\n" +
+                    "- General health, nutrition, and medical advice\n" +
+                    "\n" +
+                    "STRICT RULES:\n" +
+                    "1. If user asks ANYTHING unrelated to health/medicine/pharmacy (essays, coding, jokes, math, politics, etc.) reply ONLY: 'I can only help with medical and pharmacy related questions.'\n" +
+                    "2. NEVER recommend prescription drugs for self-medication\n" +
+                    "3. For serious conditions always add: 'Please consult a doctor.'\n" +
+                    "4. Do NOT engage in any off-topic conversation under any circumstances\n" +
+                    "\n" +
+                    "Current Inventory:\n" + inventoryContext;
 
             String requestBody = "{"
                     + "\"model\":\"" + MODEL_NAME + "\","
