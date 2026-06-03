@@ -87,7 +87,7 @@ jobs:
           jpackage `
             --input target `
             --main-jar PharmaStock-fat.jar `
-            --main-class pharmastock.ui.MainApp `
+            --main-class pharmastock.ui.Launcher `
             --runtime-image custom-jre `
             --name PharmaStock `
             --app-version $version `

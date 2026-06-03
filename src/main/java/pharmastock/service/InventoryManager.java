@@ -16,9 +16,7 @@ public class InventoryManager {
 
     private ArrayList<Medication> medicineList;
 
-    // File will be saved in user's home directory — always works
-    private static final String FILE_PATH =
-            System.getProperty("user.home") + File.separator + "pharmacy_db.txt";
+    private static final String FILE_PATH = "pharmacy_db.txt";
 
     public InventoryManager() {
         this.medicineList = new ArrayList<>();
@@ -81,8 +79,7 @@ public class InventoryManager {
         return sb.toString();
     }
 
-    private static final String BILLS_FILE_PATH =
-            System.getProperty("user.home") + File.separator + "pharmacy_bills.txt";
+    private static final String BILLS_FILE_PATH = "pharmacy_bills.txt";
 
     public void saveBill(String billText) {
         PrintWriter writer = null;
