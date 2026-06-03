@@ -6,8 +6,11 @@ import pharmastock.exception.InsufficientStockException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.Scanner;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class InventoryManager {
 
@@ -76,6 +79,24 @@ public class InventoryManager {
 
         sb.append("==============================");
         return sb.toString();
+    }
+
+    private static final String BILLS_FILE_PATH =
+            System.getProperty("user.home") + File.separator + "pharmacy_bills.txt";
+
+    public void saveBill(String billText) {
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(new FileWriter(BILLS_FILE_PATH, true));
+            writer.println("Date/Time: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            writer.println(billText);
+            writer.println();
+            System.out.println("Bill saved at: " + BILLS_FILE_PATH);
+        } catch (Exception e) {
+            System.out.println("Error saving bill: " + e.getMessage());
+        } finally {
+            if (writer != null) writer.close();
+        }
     }
 
     // Returns file path so UI can show user where file is saved

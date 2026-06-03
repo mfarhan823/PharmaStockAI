@@ -385,6 +385,7 @@ public class MainWindow {
 
         txtInvoiceArea.setText(bill.toString());
 
+        manager.saveBill(bill.toString());
         manager.saveFile();
         checkLowStockAlerts();
         chatBot.setInventoryContext(manager.getAllMedicinesAsText());
